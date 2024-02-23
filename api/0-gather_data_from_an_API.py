@@ -1,35 +1,36 @@
-import sys
+#!/usr/bin/python3
+"""Script to get todos for a user from API"""
+
 import requests
+import sys
 
-def fetch_todo_list_progress(employee_id):
-    base_url = 'https://jsonplaceholder.typicode.com'
-    user_url = f'{base_url}/users/{employee_id}'
-    todos_url = f'{base_url}/todos?userId={employee_id}'
 
-    try:
-        user_response = requests.get(user_url)
-        todos_response = requests.get(todos_url)
-        user_response.raise_for_status()
-        todos_response.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-        print(f"Error accessing API: {err}")
-        return
+def main():
+    """main function"""
+    user_id = int(sys.argv[1])
+    todo_url = 'https://jsonplaceholder.typicode.com/todos'
+    user_url = 'https://jsonplaceholder.typicode.com/users/{}'.format(user_id)
 
-    user_data = user_response.json()
-    todos_data = todos_response.json()
+    response = requests.get(todo_url)
 
-    employee_name = user_data['name']
-    total_tasks = len(todos_data)
-    completed_tasks = [task['title'] for task in todos_data if task['completed']]
+    total_questions = 0
+    completed = []
+    for todo in response.json():
 
-    print(f"Employee {employee_name} is done with tasks({len(completed_tasks)}/{total_tasks}):")
-    for task in completed_tasks:
-        print(f"\t{task}")
+        if todo['userId'] == user_id:
+            total_questions += 1
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python3 0-gather_data_from_an_API.py <employee_id>")
-        sys.exit(1)
+            if todo['completed']:
+                completed.append(todo['title'])
 
-    employee_id = int(sys.argv[1])
-    fetch_todo_list_progress(employee_id)
+    user_name = requests.get(user_url).json()['name']
+
+    printer = ("Employee {} is done with tasks({}/{}):".format(user_name,
+               len(completed), total_questions))
+    print(printer)
+    for q in completed:
+        print("\t {}".format(q))
+
+
+if __name__ == '__main__':
+    main()
